@@ -7,4 +7,4 @@ build:
 
 run:
 	@echo "Running..."
-	@docker run -d -p 8080:80 --rm --name chat chat:latest
+	@docker run -d -p 5550:80 --rm --name chat chat:latest
