@@ -16,16 +16,17 @@ function login(event) {
 
 function updateLoggedIn() {
 	if (loggedIn) {
-		document.getElementById("login-form").style.display = "none";
-		document.getElementById("chat-form").style.display = "block";
+		document.getElementById("login-block").style.display = "none";
+		document.getElementById("chat-block").style.display = "block";
+		document.getElementById("input-message-block").style.display = "block";
 	} else {
-		document.getElementById("login-form").style.display = "block";
-		document.getElementById("chat-form").style.display = "none";
+		document.getElementById("login-block").style.display = "block";
+		document.getElementById("chat-block").style.display = "none";
+		document.getElementById("input-message-block").style.display = "none";
 	}
 }
 
 function onMessage(event) {
-	var messages = document.getElementById("messages");
 	const data = JSON.parse(event.data);
 	switch (data.response_type) {
 		case "successful_login":
@@ -33,10 +34,11 @@ function onMessage(event) {
 			updateLoggedIn();
 			break;
 		case "message":
-			var message = document.createElement("li");
-			var content = document.createTextNode(data.message);
-			message.appendChild(content);
+			let messages = document.getElementById("messages-container");
+			let chatBlock = document.getElementById("chat-block");
+			let message = getMessageDiv(data.message, data.user);
 			messages.appendChild(message);
+			chatBlock.scrollTop = chatBlock.scrollHeight;
 			break;
 
 		default:
@@ -45,7 +47,7 @@ function onMessage(event) {
 }
 
 function sendMessage(event) {
-	var input = document.getElementById("messageText");
+	let input = document.getElementById("messageText");
 	const message = {
 		type: "message",
 		data: { message: input.value },
@@ -56,6 +58,15 @@ function sendMessage(event) {
 	event.preventDefault();
 }
 
-var ws = new WebSocket("ws://localhost:5550/websocket/ws");
+function getMessageDiv(message, username) {
+	let temp = document.getElementsByTagName("template")[0];
+	let clon = temp.content.cloneNode(true);
+	clon.querySelector(".message").textContent = message;
+	clon.querySelector(".username").textContent = username || "Anonymous";
+
+	return clon;
+}
+
+let ws = new WebSocket("ws://localhost:5550/websocket/ws");
 ws.onmessage = onMessage;
 updateLoggedIn();

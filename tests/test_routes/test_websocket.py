@@ -35,4 +35,4 @@ def test_login(websocket_session: WebSocketTestSession):
         assert user.id == user_id
         assert user.username == username
 
-        login_message_mock.assert_called_once_with(username)
+        login_message_mock.assert_called_once_with(username, user.id)
