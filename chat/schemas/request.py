@@ -34,16 +34,21 @@ class MessageRequestDataModel(BaseModel):
 
 
 class LoginRequestModel(BaseRequestModel):
-    type: Literal[RequestType.LOGIN]
+    type: Literal[RequestType.LOGIN] = RequestType.LOGIN
     data: LoginRequestDataModel
 
 
 class MessageRequestModel(BaseRequestModel):
-    type: Literal[RequestType.MESSAGE]
+    type: Literal[RequestType.MESSAGE] = RequestType.MESSAGE
     data: MessageRequestDataModel
 
 
+class LogoutRequestModel(BaseRequestModel):
+    type: Literal[RequestType.LOGOUT] = RequestType.LOGOUT
+    data: dict = {}
+
+
 RequestModel = Annotated[
-    Union[LoginRequestModel, MessageRequestModel],
+    Union[LoginRequestModel, MessageRequestModel, LogoutRequestModel],
     Field(..., discriminator="type"),
 ]

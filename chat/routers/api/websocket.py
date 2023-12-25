@@ -1,11 +1,15 @@
+import logging
+
 from fastapi.routing import APIRouter
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 from pydantic.type_adapter import TypeAdapter
 
 from chat.controllers.requests.requests import handle_request
-from chat.schemas.request import RequestModel
+from chat.schemas.request import LogoutRequestModel, RequestModel
 
 router = APIRouter(prefix="/websocket")
+
+logger = logging.getLogger(__name__)
 
 
 @router.websocket("/ws")
@@ -21,7 +25,8 @@ async def websocket_route(ws: WebSocket):
 
             response = handle_request(request)
             await ws.send_json(response.model_dump())
-        except WebSocketDisconnect as e:
-            # TODO: handle disconnect, remove user from users list
-            print(e)
-            break
+        except WebSocketDisconnect:
+            data = LogoutRequestModel(connection=ws)
+            response = handle_request(data)
+            logging.info(f"User {response.data["username"]} disconnected")
+            return

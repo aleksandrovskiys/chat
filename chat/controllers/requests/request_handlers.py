@@ -3,6 +3,7 @@ import asyncio
 from chat.controllers.messages.message_controller import MessageController
 from chat.schemas.request import (
     LoginRequestModel,
+    LogoutRequestModel,
     MessageRequestModel,
     RequestModel,
     RequestType,
@@ -79,6 +80,34 @@ class MessageRequestHandler(BaseRequestHandler[MessageRequestModel]):
             message="Message sent",
             code=0,
             response_type=ResponseType.MESSAGE_SENT,
+        )
+
+
+class LogoutRequestHandler(BaseRequestHandler[LogoutRequestModel]):
+    request_type = RequestType.LOGOUT
+
+    def handle(self) -> ResponseModel:
+        storage = get_user_storage()
+        user = storage.get_by_connection(self.request.connection)
+
+        if user is None:
+            raise ValueError("User not found")
+
+        storage.remove_user(user.id)
+
+        message_controller = MessageController(storage)
+        asyncio.create_task(
+            message_controller.send_message(
+                message=f"{user.username} left the chat",
+                author_id=user.id,
+            )
+        )
+
+        return ResponseModel(
+            message="Successful logout",
+            code=0,
+            response_type=ResponseType.SUCCESSFUL_LOGIN,
+            data=user.model_dump(),
         )
 
 

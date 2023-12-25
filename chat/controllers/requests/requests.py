@@ -2,6 +2,7 @@ from chat.controllers.requests.request_handlers import (
     BaseRequestHandler,
     FallbackRequestHandler,
     LoginRequestHandler,
+    LogoutRequestHandler,
     MessageRequestHandler,
 )
 from chat.schemas.request import RequestModel
@@ -14,6 +15,8 @@ def get_handler_for_request(request: RequestModel) -> BaseRequestHandler:
             return LoginRequestHandler(request)  # type: ignore
         case MessageRequestHandler.request_type:
             return MessageRequestHandler(request)  # type: ignore
+        case LogoutRequestHandler.request_type:
+            return LogoutRequestHandler(request)  # type: ignore
         case _:
             return FallbackRequestHandler(request)
 
