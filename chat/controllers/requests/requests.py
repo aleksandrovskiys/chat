@@ -6,7 +6,6 @@ from chat.controllers.requests.request_handlers import (
     MessageRequestHandler,
 )
 from chat.schemas.request import RequestModel
-from chat.schemas.response import ResponseModel
 
 
 def get_handler_for_request(request: RequestModel) -> BaseRequestHandler:
@@ -21,6 +20,6 @@ def get_handler_for_request(request: RequestModel) -> BaseRequestHandler:
             return FallbackRequestHandler(request)
 
 
-def handle_request(request: RequestModel) -> ResponseModel:
+def handle_request(request: RequestModel) -> None:
     handler = get_handler_for_request(request)
     return handler.handle()

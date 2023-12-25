@@ -36,7 +36,7 @@ function onMessage(event) {
 		case "message":
 			let messages = document.getElementById("messages-container");
 			let chatBlock = document.getElementById("chat-block");
-			let message = getMessageDiv(data.message, data.user);
+			let message = getMessageDiv(data.message, data.data.author.username);
 			messages.appendChild(message);
 			chatBlock.scrollTop = chatBlock.scrollHeight;
 			break;

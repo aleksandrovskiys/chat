@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from chat.controllers.messages.message_controller import MessageController
 from chat.schemas.request import (
@@ -10,6 +11,8 @@ from chat.schemas.request import (
 )
 from chat.schemas.response import ResponseModel, ResponseType
 from chat.storage.storage import get_user_storage
+
+logger = logging.getLogger(__name__)
 
 
 class BaseRequestHandler[Model: RequestModel]:
@@ -24,14 +27,19 @@ class BaseRequestHandler[Model: RequestModel]:
 
         self.request = request
 
-    def handle(self) -> ResponseModel:
+    def handle(self) -> None:
         raise NotImplementedError
+
+    def _send_response(self, response: ResponseModel) -> None:
+        asyncio.create_task(
+            self.request.connection.send_json(response.model_dump())
+        )
 
 
 class LoginRequestHandler(BaseRequestHandler[LoginRequestModel]):
     request_type = RequestType.LOGIN
 
-    def handle(self) -> ResponseModel:
+    def handle(self):
         username = self.request.data.username
         storage = get_user_storage()
 
@@ -39,11 +47,13 @@ class LoginRequestHandler(BaseRequestHandler[LoginRequestModel]):
 
         self._send_login_message(username, user.id)
 
-        return ResponseModel(
-            data=user.model_dump(),
-            message="Successful login",
-            code=0,
-            response_type=ResponseType.SUCCESSFUL_LOGIN,
+        self._send_response(
+            ResponseModel(
+                data=user.model_dump(),
+                message="Successful login",
+                code=0,
+                response_type=ResponseType.SUCCESSFUL_LOGIN,
+            )
         )
 
     def _send_login_message(self, username: str, user_id: int) -> None:
@@ -61,7 +71,7 @@ class LoginRequestHandler(BaseRequestHandler[LoginRequestModel]):
 class MessageRequestHandler(BaseRequestHandler[MessageRequestModel]):
     request_type = RequestType.MESSAGE
 
-    def handle(self) -> ResponseModel:
+    def handle(self):
         storage = get_user_storage()
         user = storage.get_by_connection(self.request.connection)
 
@@ -76,17 +86,19 @@ class MessageRequestHandler(BaseRequestHandler[MessageRequestModel]):
             )
         )
 
-        return ResponseModel(
-            message="Message sent",
-            code=0,
-            response_type=ResponseType.MESSAGE_SENT,
+        self._send_response(
+            ResponseModel(
+                message="Message sent",
+                code=0,
+                response_type=ResponseType.MESSAGE_SENT,
+            )
         )
 
 
 class LogoutRequestHandler(BaseRequestHandler[LogoutRequestModel]):
     request_type = RequestType.LOGOUT
 
-    def handle(self) -> ResponseModel:
+    def handle(self):
         storage = get_user_storage()
         user = storage.get_by_connection(self.request.connection)
 
@@ -102,21 +114,26 @@ class LogoutRequestHandler(BaseRequestHandler[LogoutRequestModel]):
                 author_id=user.id,
             )
         )
+        logger.info(f"User {user.username} disconnected")
 
-        return ResponseModel(
-            message="Successful logout",
-            code=0,
-            response_type=ResponseType.SUCCESSFUL_LOGIN,
-            data=user.model_dump(),
+        self._send_response(
+            ResponseModel(
+                message="Successful logout",
+                code=0,
+                response_type=ResponseType.SUCCESSFUL_LOGIN,
+                data=user.model_dump(),
+            )
         )
 
 
 class FallbackRequestHandler(BaseRequestHandler):
     request_type = RequestType.UNKNOWN
 
-    def handle(self) -> ResponseModel:
-        return ResponseModel(
-            message="Unknown request type",
-            code=1,
-            response_type=ResponseType.UNKNOWN_REQUEST_TYPE,
+    def handle(self):
+        self._send_response(
+            ResponseModel(
+                message="Unknown request type",
+                code=1,
+                response_type=ResponseType.UNKNOWN_REQUEST_TYPE,
+            )
         )

@@ -1,4 +1,4 @@
-@PHONY: build
+@PHONY: build run
 
 build:
 	@echo "Building..."
@@ -6,5 +6,6 @@ build:
 
 
 run:
-	@echo "Running..."
-	@docker run -d -p 5550:80 --rm --name chat chat:latest
+	echo "Running..."
+	if [ "$(shell docker ps -aq -f name=chat)" ]; then docker rm -f chat; fi
+	docker run -d -p 5550:80 --rm --name chat chat:latest

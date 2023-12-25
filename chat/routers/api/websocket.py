@@ -9,8 +9,6 @@ from chat.schemas.request import LogoutRequestModel, RequestModel
 
 router = APIRouter(prefix="/websocket")
 
-logger = logging.getLogger(__name__)
-
 
 @router.websocket("/ws")
 async def websocket_route(ws: WebSocket):
@@ -23,10 +21,8 @@ async def websocket_route(ws: WebSocket):
             adapter = TypeAdapter(RequestModel)
             request = adapter.validate_python(data)
 
-            response = handle_request(request)
-            await ws.send_json(response.model_dump())
+            handle_request(request)
         except WebSocketDisconnect:
             data = LogoutRequestModel(connection=ws)
-            response = handle_request(data)
-            logging.info(f"User {response.data["username"]} disconnected")
+            handle_request(data)
             return
