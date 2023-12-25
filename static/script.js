@@ -26,11 +26,22 @@ function updateLoggedIn() {
 
 function onMessage(event) {
 	var messages = document.getElementById("messages");
-	var message = document.createElement("li");
-	var content = document.createTextNode(event.data);
-	message.appendChild(content);
-	messages.appendChild(message);
-	updateLoggedIn();
+	const data = JSON.parse(event.data);
+	switch (data.response_type) {
+		case "successful_login":
+			loggedIn = true;
+			updateLoggedIn();
+			break;
+		case "message":
+			var message = document.createElement("li");
+			var content = document.createTextNode(data.message);
+			message.appendChild(content);
+			messages.appendChild(message);
+			break;
+
+		default:
+			break;
+	}
 }
 
 function sendMessage(event) {

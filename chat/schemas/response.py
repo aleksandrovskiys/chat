@@ -4,9 +4,11 @@ from pydantic import BaseModel
 
 
 class ResponseType(str, Enum):
-    SUCCESSFUL_LOGIN = "Successful login"
-    UNSUCCESSFUL_LOGIN = "Unsuccessful login"
-    MESSAGE_SENT = "Message sent"
+    SUCCESSFUL_LOGIN = "successful_login"
+    UNSUCCESSFUL_LOGIN = "unsuccessful_login"
+
+    MESSAGE = "message"
+    MESSAGE_SENT = "message_sent"
 
     UNKNOWN_REQUEST_TYPE = "Unknown request type"
 

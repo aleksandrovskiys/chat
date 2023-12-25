@@ -1,3 +1,6 @@
+import asyncio
+
+from chat.controllers.messages.message_controller import MessageController
 from chat.schemas.request import (
     LoginRequestModel,
     MessageRequestModel,
@@ -33,6 +36,8 @@ class LoginRequestHandler(BaseRequestHandler[LoginRequestModel]):
 
         user = storage.add_user(username, connection=self.request.connection)
 
+        self._send_login_message(username, user.id)
+
         return ResponseModel(
             data=user.model_dump(),
             message="Successful login",
@@ -40,11 +45,36 @@ class LoginRequestHandler(BaseRequestHandler[LoginRequestModel]):
             response_type=ResponseType.SUCCESSFUL_LOGIN,
         )
 
+    def _send_login_message(self, username: str, user_id: int) -> None:
+        storage = get_user_storage()
+        message_controller = MessageController(storage)
+
+        asyncio.create_task(
+            message_controller.send_message(
+                message=f"{username} joined the chat",
+                author_id=user_id,
+            )
+        )
+
 
 class MessageRequestHandler(BaseRequestHandler[MessageRequestModel]):
     request_type = RequestType.MESSAGE
 
     def handle(self) -> ResponseModel:
+        storage = get_user_storage()
+        user = storage.get_by_connection(self.request.connection)
+
+        if user is None:
+            raise ValueError("User not found")
+
+        message_controller = MessageController(storage)
+        asyncio.create_task(
+            message_controller.send_message(
+                message=self.request.data.message,
+                author_id=user.id,
+            )
+        )
+
         return ResponseModel(
             message="Message sent",
             code=0,
