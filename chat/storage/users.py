@@ -50,15 +50,18 @@ class InMemoryUserStorage(UserStorage):
     def __init__(self):
         self._users: deque[User] = deque()
         self._lock = threading.Lock()
+        self._max_id = 1
 
     def add_user(self, username: str, connection: WebSocket) -> User:
         with self._lock:
+            user_id = self._get_max_id() + 1
             user = User(
-                id=self._get_max_id() + 1,
+                id=user_id,
                 username=username,
                 connection=connection,
             )
             self._users.append(user)
+            self._max_id = user_id
         return user
 
     def remove_user(self, id: int) -> User:
@@ -97,9 +100,7 @@ class InMemoryUserStorage(UserStorage):
         return [user.connection for user in self._users]
 
     def _get_max_id(self) -> int:
-        if not self._users:
-            return 1
-        return max(user.id for user in self._users)
+        return self._max_id
 
     def __len__(self) -> int:
         return len(self._users)

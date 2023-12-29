@@ -40,7 +40,6 @@ def test_login_response(websocket_session: WebSocketTestSession):
 
 def test_send_message_response(websocket_session: WebSocketTestSession):
     username = "test_user_name"
-    storage = get_user_storage()
     with mock.patch(
         "chat.controllers.requests.request_handlers."
         "LoginRequestHandler._send_login_message"
