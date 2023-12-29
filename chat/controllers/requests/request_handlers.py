@@ -72,6 +72,16 @@ class MessageRequestHandler(BaseRequestHandler[MessageRequestModel]):
     request_type = RequestType.MESSAGE
 
     def handle(self):
+        self._send_message()
+        self._send_response(
+            ResponseModel(
+                message="Message sent",
+                code=0,
+                response_type=ResponseType.MESSAGE_SENT,
+            )
+        )
+
+    def _send_message(self) -> None:
         storage = get_user_storage()
         user = storage.get_by_connection(self.request.connection)
 
@@ -83,14 +93,6 @@ class MessageRequestHandler(BaseRequestHandler[MessageRequestModel]):
             message_controller.send_message(
                 message=self.request.data.message,
                 author_id=user.id,
-            )
-        )
-
-        self._send_response(
-            ResponseModel(
-                message="Message sent",
-                code=0,
-                response_type=ResponseType.MESSAGE_SENT,
             )
         )
 

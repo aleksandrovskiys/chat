@@ -5,7 +5,7 @@ from starlette.testclient import WebSocketTestSession
 from chat.storage.storage import get_user_storage
 
 
-def test_login(websocket_session: WebSocketTestSession):
+def test_login_response(websocket_session: WebSocketTestSession):
     username = "test_user_name"
     storage = get_user_storage()
     with mock.patch(
@@ -36,3 +36,36 @@ def test_login(websocket_session: WebSocketTestSession):
         assert user.username == username
 
         login_message_mock.assert_called_once_with(username, user.id)
+
+
+def test_send_message_response(websocket_session: WebSocketTestSession):
+    username = "test_user_name"
+    storage = get_user_storage()
+    with mock.patch(
+        "chat.controllers.requests.request_handlers."
+        "LoginRequestHandler._send_login_message"
+    ):
+        websocket_session.send_json(
+            {"type": "login", "data": {"username": username}}
+        )
+        websocket_session.receive_json()
+
+    with mock.patch(
+        "chat.controllers.requests.request_handlers."
+        "MessageRequestHandler._send_message"
+    ) as send_message_mock:
+        message = "test_message"
+        websocket_session.send_json(
+            {"type": "message", "data": {"message": message}}
+        )
+
+        response = websocket_session.receive_json()
+
+        assert response is not None
+        assert response["message"] == "Message sent"
+        assert response["code"] == 0
+        assert "data" in response
+        assert isinstance(response["data"], dict)
+        assert response["data"] == {}
+
+        send_message_mock.assert_called_once()
