@@ -1,5 +1,3 @@
-import logging
-
 from fastapi.routing import APIRouter
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 from pydantic.type_adapter import TypeAdapter
